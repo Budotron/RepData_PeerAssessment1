@@ -2,6 +2,7 @@
 The following is an analysis of the data from a personal activity device. This analysis was conducted as a project for the Reproducible Reserach class offered through Coursera. The data was forked from the github repository <https://github.com/rdpeng/RepData_PeerAssessment1>, and the analysis was guided by specific questions that can be found in the README
 
 ## Loading and preprocessing the data
+1. *Load the data (i.e. read.csv())*
 
 ```r
 # create a data frame from the read file, unless this step has 
@@ -12,8 +13,10 @@ if (!exists("activitydata")){
                                sep = ",", na.strings="NA")
 }
 ```
-The activitydata data frame spans 1/10/2012 through 30/11/2012. 
+The activitydata data frame spans 1/10/2012 through 30/11/2012.   
 
+2 *Process/transform the data (if necessary) into a format suitable for your analysis*  
+All processing is simple enough to take place in-question
 
 ## What is mean total number of steps taken per day?  
 1. *Make a histogram of the total number of steps taken each day*  
@@ -75,7 +78,30 @@ head(meanAndMeds, 10)
 
 ## What is the average daily activity pattern?
 
-1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+1. *Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)*
+
+```r
+dataByInterval<-split(activitydata$steps, activitydata$interval)
+avStepsByInterval<-lapply(dataByInterval, function(x) mean(x, na.rm = T))
+plot(x = unique(activitydata$interval),y = avStepsByInterval, type="l")
+```
+
+![plot of chunk unnamed-chunk-7](./PA1_template_files/figure-html/unnamed-chunk-7.png) 
+2. *Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?*
+
+```r
+# get the values in the list avStepsByInterval 
+avStepsByInterval<-matrix(unlist(avStepsByInterval),ncol=1)
+maxAv<-max(avStepsByInterval)
+indMax<-which(avStepsByInterval %in% maxAv)
+lower<-unique(activitydata$interval)[indMax]
+upper<-lower+5
+paste("The interval contains the maximum number of steps is", lower, "(to", upper, "), and the maximum average number of steps is", maxAv, sep = " ")
+```
+
+```
+## [1] "The interval contains the maximum number of steps is 835 (to 840 ), and the maximum average number of steps is 206.169811320755"
+```
 
 ## Imputing missing values
 
