@@ -1,5 +1,5 @@
 # Reproducible Research: Peer Assessment 1
-The following is an analysis of the data from a personal activity device. This analysis was conducted as a project for the Reproducible Reserach class offered through Coursera. The data was forked from the github repository <https://github.com/rdpeng/RepData_PeerAssessment1>, and the analysis was guided by specific questions that can be found in the README
+The following is an analysis of the data from a personal activity monitoring device. This analysis was conducted as a project for the Reproducible Research class offered through Coursera. The data was forked from the github repository <https://github.com/rdpeng/RepData_PeerAssessment1>, and the analysis was guided by specific questions that can be found in the README
 
 ## Loading and preprocessing the data
 1. *Load the data (i.e. read.csv())*
@@ -25,9 +25,9 @@ allStepsByDay<-split(activitydata$steps, activitydata$date)
 # sum all steps in each day
 stepSumByDay<-lapply(X = allStepsByDay, FUN = sum) 
 # extract all values from list
-totalStepsByDay<-matrix(unlist(stepSumByDay),ncol=1) 
+stepSumByDay<-matrix(unlist(stepSumByDay),ncol=1) 
 # plot histogram of extracted values
-hist(totalStepsByDay, xlab = "total number of steps recorded each day", main = "Histogram of total recorded steps between 1/10/2012 and 30/11/2012")
+hist(stepSumByDay, xlab = "total number of steps recorded each day", main = "Histogram of total recorded steps between 1/10/2012 and 30/11/2012")
 ```
 
 ![plot of chunk unnamed-chunk-2](./PA1_template_files/figure-html/unnamed-chunk-2.png) 
@@ -38,13 +38,13 @@ hist(totalStepsByDay, xlab = "total number of steps recorded each day", main = "
 #for each day, calculate the mean of the steps taken
 stepMeans<-lapply(X = allStepsByDay, function(x) mean(x, na.rm = T))
 ```
-On any day, there are many five-minute intervals for which the number of steps recorded is 0. To accurately find the median number of steps taken *throughout the day*, these 0s must first be discarded. 
+On any day, there are many five-minute intervals for which the number of steps recorded is 0. To accurately find the median number of *steps taken*, these 0s must first be discarded. 
 
 ```r
-#copy activitydata to nonZeroData
+# copy activitydata to nonZeroData and change all 0 values in nonZeroData$steps to NAs
 nonZeroStepData<-activitydata
-#change all 0 values in nonZeroData$steps to NAs 
-nonZeroStepData$steps[nonZeroStepData$steps==0]<-NA 
+nonZeroStepData$steps[nonZeroStepData$steps==0]<-NA
+# split the processed step record by day
 nonZeroStepsByDay<-split(nonZeroStepData$steps, nonZeroStepData$date)
 # Calculate the median for each day
 stepMedians<-lapply(X = nonZeroStepsByDay, function(x) median(x, na.rm = T))
@@ -54,16 +54,25 @@ The following table presents the mean and median number of steps taken for each 
 
 ```r
 meanAndMeds<-as.data.frame(cbind(stepMeans, stepMedians))
-head(meanAndMeds, 5)
+list(HEAD = head(meanAndMeds,5), TAIL = tail(meanAndMeds,5))
 ```
 
 ```
+## $HEAD
 ##            stepMeans stepMedians
 ## 2012-10-01       NaN          NA
 ## 2012-10-02    0.4375          63
 ## 2012-10-03     39.42          61
 ## 2012-10-04     42.07        56.5
 ## 2012-10-05     46.16          66
+## 
+## $TAIL
+##            stepMeans stepMedians
+## 2012-11-26     38.76          53
+## 2012-11-27     47.38          57
+## 2012-11-28     35.36          70
+## 2012-11-29     24.47        44.5
+## 2012-11-30       NaN          NA
 ```
 
 
@@ -72,8 +81,11 @@ head(meanAndMeds, 5)
 1. *Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)*
 
 ```r
-dataByInterval<-split(activitydata$steps, activitydata$interval)
-avStepsByInterval<-lapply(dataByInterval, function(x) mean(x, na.rm = T))
+# obtain the step record for each interval
+stepsByInterval<-split(activitydata$steps, activitydata$interval)
+# calculate the average number of steps per interval
+avStepsByInterval<-lapply(stepsByInterval, function(x) mean(x, na.rm = T))
+# create time-series plot
 plot(x = unique(activitydata$interval),y = avStepsByInterval, type="l", xlab = "Five Minute Intervals", ylab = "Average number of steps taken", main = "Time series plot of interval vs average steps")
 ```
 
@@ -92,17 +104,17 @@ indMax<-which(avStepsByInterval %in% maxAv)
 # use the index to find the interval
 lower<-unique(activitydata$interval)[indMax]
 upper<-lower+5
-paste("The interval containing the maximum number of steps is", lower, "(to", upper, "), and the maximum average number of steps is", maxAv, sep = " ")
+paste("The 5 minute interval containing the maximum number of steps is", lower, "(to", upper, "), and the maximum average number of steps is", maxAv, sep = " ")
 ```
 
 ```
-## [1] "The interval containing the maximum number of steps is 835 (to 840 ), and the maximum average number of steps is 206.169811320755"
+## [1] "The 5 minute interval containing the maximum number of steps is 835 (to 840 ), and the maximum average number of steps is 206.169811320755"
 ```
 
 ## Imputing missing values
 1. *Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)*  
 
-It makes sense that NAs only occur in steps, with all other data being automatically recorded by the device. Thus, the total number of rows with NAs is given by
+NAs only occur in steps, with all other data being automatically recorded by the device. Thus, the total number of rows with NAs is given by
 
 ```r
 sum(is.na(activitydata$steps))
@@ -116,69 +128,72 @@ sum(is.na(activitydata$steps))
 Recalling the heuristics that  
 -the median is most useful for describing the center of skewed distributions  
 -the mean is most useful for describing symmetric distributions  
--the ratio of the mean to the median is a measure of skewness, ie: when $\frac{mean}{median}\approx1$, the distribution is symmetric; else, it is left- or right-skewed
+-the ratio of the mean to the median is a measure of skewness, i,e,: when $\frac{mean}{median}\approx1$, the distribution is symmetric; else, it is left- or right-skewed
 
 the following imputation strategy is proposed:  
-1. in each interval, use the ratio of mean to median to decide the skewness of the distribution  
-2. replace NAs by the mean value of the interval if the ratio of mean to median in that interval is between 0.8 and 1.2  
-3. otherwise, replace NAs with the median value of the interval  
-However, after processing, many intervals will be composed of NAs only, perhaps indicating a period of regular non-movement (as in travelling to work). 
+1. in each interval, use the ratio of mean to median to decide the skewness of the distribution of steps in that interval  
+2. replace NAs by the mean value of the interval if the ratio of mean to median in that interval is between 0.9 and 1.1  
+3. otherwise, replace NAs with the median value of the interval, unless the median value is itself NA, in which case we use the mean, which will be 0. 
+
 
 ```r
-# split nonZeroStepData (previously computed) to get data by interval
+# split nonZeroStepData (=activity data with 0s replaced by NAs) by interval
 nonZeroStepsByInterval<-split(nonZeroStepData$steps, nonZeroStepData$interval)
-nonZeroStepsByInterval[9]
-```
-
-```
-## $`40`
-##  [1] NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA
-## [24] NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA
-## [47] NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA
-```
-In such cases, the median will be NA, and so will the ratio of mean to median. Then, NAs are replaced by the mean. 
-
-```r
 # Calculate the median for each interval
 intervalStepMedians<-lapply(X = nonZeroStepsByInterval, function(x) median(x, na.rm = T))
 #calculate the ratio of mean to median
 intervalStepMedians<-matrix(unlist(intervalStepMedians), ncol = 1)
 ratios<-as.vector(avStepsByInterval/intervalStepMedians)
+# replace NAs using the imputation procedure
 for (i in (1:length(ratios))){
         if (is.na(ratios[i])){
-                dataByInterval[[i]][which(is.na(dataByInterval[[i]]) %in% T)]<-avStepsByInterval[i]
-        }else if(ratios[i] < 0.8){ 
-                dataByInterval[[i]][which(is.na(dataByInterval[[i]]) %in% T)]<-avStepsByInterval[i]
-        }else if (ratios[i] > 1.2){
-                dataByInterval[[i]][which(is.na(dataByInterval[[i]]) %in% T)]<-avStepsByInterval[i]
+                stepsByInterval[[i]][which(is.na(stepsByInterval[[i]]) %in% T)]<-avStepsByInterval[i]
+        }else if(ratios[i] < 0.9){ 
+                stepsByInterval[[i]][which(is.na(stepsByInterval[[i]]) %in% T)]<-avStepsByInterval[i]
+        }else if (ratios[i] > 1.1){
+                stepsByInterval[[i]][which(is.na(stepsByInterval[[i]]) %in% T)]<-avStepsByInterval[i]
         }else {
-             dataByInterval[[i]][which(is.na(dataByInterval[[i]]) %in% T)]<-intervalStepMedians[i]
+             stepsByInterval[[i]][which(is.na(stepsByInterval[[i]]) %in% T)]<-intervalStepMedians[i]
         }
 }
-#check that the missing data is successfully imputed
-dataByInterval[10]
-```
-
-```
-## $`45`
-##  [1]  1.472  0.000  0.000  0.000  0.000  0.000  0.000  1.472  0.000  0.000
-## [11]  0.000  0.000  0.000  0.000  0.000  0.000 72.000  0.000  0.000  6.000
-## [21]  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
-## [31]  0.000  1.472  0.000  0.000  1.472  0.000  0.000  0.000  0.000  1.472
-## [41]  1.472  0.000  0.000  0.000  1.472  0.000  0.000  0.000  0.000  0.000
-## [51]  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
-## [61]  1.472
 ```
 
 3. *Create a new dataset that is equal to the original dataset but with the missing data filled in.*
 
 ```r
-allsteps<-unsplit(dataByInterval, activitydata$interval)
+allsteps<-unsplit(stepsByInterval, activitydata$interval)
+steps<-activitydata$steps
 dates<-activitydata$date
 interval<-activitydata$interval
 newdf<-data.frame(allsteps, dates, interval)
+ 
+# sanity check
+df2<-data.frame(steps, allsteps, dates, interval)
+list(HEAD = head(df2,3), MID = df2[800:802,], TAIL = tail(df2,3))
 ```
-4. *Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day*  
+
+```
+## $HEAD
+##   steps allsteps      dates interval
+## 1    NA   1.7170 2012-10-01        0
+## 2    NA   0.3396 2012-10-01        5
+## 3    NA   0.1321 2012-10-01       10
+## 
+## $MID
+##     steps allsteps      dates interval
+## 800    26       26 2012-10-03     1835
+## 801    22       22 2012-10-03     1840
+## 802     0        0 2012-10-03     1845
+## 
+## $TAIL
+##       steps allsteps      dates interval
+## 17566    NA   0.6415 2012-11-30     2345
+## 17567    NA   0.2264 2012-11-30     2350
+## 17568    NA   1.0755 2012-11-30     2355
+```
+4. *Make a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day*  
+
+Create histogram
 
 ```r
 # split the step record by day
@@ -191,87 +206,149 @@ newTotalStepsByDay<-matrix(unlist(newStepSumByDay),ncol=1)
 hist(newTotalStepsByDay, xlab = "total number of steps recorded each day", main = "Total recorded steps between 1/10/2012 and 30/11/2012 (NA replaced)")
 ```
 
-![plot of chunk unnamed-chunk-12](./PA1_template_files/figure-html/unnamed-chunk-12.png) 
+![plot of chunk unnamed-chunk-11](./PA1_template_files/figure-html/unnamed-chunk-11.png) 
+Calculate mean and median after imputation
 
 ```r
-#for each day, calculate the mean of the steps taken
-newStepMeans<-lapply(X = newAllStepsByDay, function(x) mean(x, na.rm = T))
-#copy activitydata to nonZeroData
-newNonZeroStepData<-newdf
-#change all 0 values in nonZeroData$steps to NAs 
-newNonZeroStepData$steps[newNonZeroStepData$allsteps==0]<-NA 
-newNonZeroStepsByDay<-split(newNonZeroStepData$allsteps, 
-                            newNonZeroStepData$date)
-# Calculate the median for each day
-newStepMedians<-lapply(X = newNonZeroStepsByDay, 
-                       function(x) median(x, na.rm = T))
-newMeanAndMeds<-as.data.frame(cbind(newStepMeans, newStepMedians, stepMeans, stepMedians))
-head(newMeanAndMeds, 200)
+# compute means as before
+IMallStepsByDay<-split(newdf$allsteps, newdf$dates)
+IMstepMeans<-lapply(X = IMallStepsByDay, function(x) mean(x, na.rm = T))
+
+# compute medians as before
+nznewdf<-newdf
+nznewdf$allsteps[floor(nznewdf$allsteps)==0]<-NA
+IMnzStepData<-split(nznewdf$allsteps, nznewdf$dates)
+IMstepMedians<-lapply(IMnzStepData, function(x) median(x, na.rm = T))
+
+# display with unimputed means and medians
+meanAndMeds2<-as.data.frame(cbind(stepMeans, IMstepMeans, stepMedians, IMstepMedians))
+list(HEAD = head(meanAndMeds2,8), TAIL = tail(meanAndMeds2,5))
 ```
 
 ```
-##            newStepMeans newStepMedians stepMeans stepMedians
-## 2012-10-01        37.86          34.88       NaN          NA
-## 2012-10-02       0.4375              0    0.4375          63
-## 2012-10-03        39.42              0     39.42          61
-## 2012-10-04        42.07              0     42.07        56.5
-## 2012-10-05        46.16              0     46.16          66
-## 2012-10-06        53.54              0     53.54          67
-## 2012-10-07        38.25              0     38.25        52.5
-## 2012-10-08        37.86          34.88       NaN          NA
-## 2012-10-09        44.48              0     44.48          48
-## 2012-10-10        34.38              0     34.38        56.5
-## 2012-10-11        35.78              0     35.78          35
-## 2012-10-12        60.35              0     60.35          46
-## 2012-10-13        43.15              0     43.15        45.5
-## 2012-10-14        52.42              0     52.42        60.5
-## 2012-10-15         35.2              0      35.2          54
-## 2012-10-16        52.38              0     52.38          64
-## 2012-10-17        46.71              0     46.71        61.5
-## 2012-10-18        34.92              0     34.92        52.5
-## 2012-10-19        41.07              0     41.07          74
-## 2012-10-20        36.09              0     36.09          49
-## 2012-10-21        30.63              0     30.63          48
-## 2012-10-22        46.74              0     46.74          52
-## 2012-10-23        30.97              0     30.97          56
-## 2012-10-24        29.01              0     29.01        51.5
-## 2012-10-25        8.653              0     8.653          35
-## 2012-10-26        23.53              0     23.53        36.5
-## 2012-10-27        35.14              0     35.14          72
-## 2012-10-28        39.78              0     39.78          61
-## 2012-10-29        17.42              0     17.42        54.5
-## 2012-10-30        34.09              0     34.09          40
-## 2012-10-31        53.52              0     53.52        83.5
-## 2012-11-01        37.86          34.88       NaN          NA
-## 2012-11-02        36.81              0     36.81        55.5
-## 2012-11-03         36.7              0      36.7          59
-## 2012-11-04        37.86          34.88       NaN          NA
-## 2012-11-05        36.25              0     36.25          66
-## 2012-11-06        28.94              0     28.94          52
-## 2012-11-07        44.73              0     44.73          58
-## 2012-11-08        11.18              0     11.18        42.5
-## 2012-11-09        37.86          34.88       NaN          NA
-## 2012-11-10        37.86          34.88       NaN          NA
-## 2012-11-11        43.78              0     43.78          55
-## 2012-11-12        37.38              0     37.38          42
-## 2012-11-13        25.47              0     25.47          57
-## 2012-11-14        37.86          34.88       NaN          NA
-## 2012-11-15       0.1424              0    0.1424        20.5
-## 2012-11-16        18.89              0     18.89          43
-## 2012-11-17        49.79              0     49.79        65.5
-## 2012-11-18        52.47              0     52.47          80
-## 2012-11-19         30.7              0      30.7          34
-## 2012-11-20        15.53              0     15.53          58
-## 2012-11-21         44.4              0      44.4          55
-## 2012-11-22        70.93              0     70.93          65
-## 2012-11-23        73.59              0     73.59         113
-## 2012-11-24        50.27              0     50.27        65.5
-## 2012-11-25        41.09              0     41.09          84
-## 2012-11-26        38.76              0     38.76          53
-## 2012-11-27        47.38              0     47.38          57
-## 2012-11-28        35.36              0     35.36          70
-## 2012-11-29        24.47              0     24.47        44.5
-## 2012-11-30        37.86          34.88       NaN          NA
+## $HEAD
+##            stepMeans IMstepMeans stepMedians IMstepMedians
+## 2012-10-01       NaN       37.52          NA         42.38
+## 2012-10-02    0.4375      0.4375          63            63
+## 2012-10-03     39.42       39.42          61            61
+## 2012-10-04     42.07       42.07        56.5          56.5
+## 2012-10-05     46.16       46.16          66            66
+## 2012-10-06     53.54       53.54          67            67
+## 2012-10-07     38.25       38.25        52.5          52.5
+## 2012-10-08       NaN       37.52          NA         42.38
+## 
+## $TAIL
+##            stepMeans IMstepMeans stepMedians IMstepMedians
+## 2012-11-26     38.76       38.76          53            53
+## 2012-11-27     47.38       47.38          57            57
+## 2012-11-28     35.36       35.36          70            70
+## 2012-11-29     24.47       24.47        44.5          44.5
+## 2012-11-30       NaN       37.52          NA         42.38
+```
+*Do these values differ from the estimates from the first part of the assignment?*  
+There are no differences in the means and medians of the imputed and unimputed data, with the exception of the NAs/NaNs of the latter being replaced. 
+K  
+*What is the impact of imputing missing data on the estimates of the total daily number of steps?*
+
+```r
+unimputed<-sum(stepSumByDay, na.rm = T)
+imputed<-sum(newTotalStepsByDay, na.rm = T)
+absdiff<-abs(unimputed-imputed)
+data.frame(unimputed, imputed, absdiff)
 ```
 
-## Are there differences in activity patterns between weekdays and weekends?
+```
+##   unimputed imputed absdiff
+## 1    570608  657062   86454
+```
+Imputing missing data increases the total number of daily steps by 86454. This is reflected in the higher frequencies of the histogram of the imputed data: 
+
+```r
+par(mfrow=c(1,2))
+hist(stepSumByDay, xlab = "total number of steps recorded each day", main = "Unimputed")
+hist(newTotalStepsByDay, xlab = "total number of steps recorded each day", main = "Imputed")
+```
+
+![plot of chunk unnamed-chunk-14](./PA1_template_files/figure-html/unnamed-chunk-14.png) 
+## Are there differences in activity patterns between weekdays and weekends?  
+1. *Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.*
+
+```r
+# copy the data for imputed values
+newdf2<-newdf
+# create a new factor in newdf2 called day. 
+newdf2$day<-as.factor(weekdays(as.Date(newdf2$dates)))
+head(newdf2, 3)
+```
+
+```
+##   allsteps      dates interval    day
+## 1   1.7170 2012-10-01        0 Monday
+## 2   0.3396 2012-10-01        5 Monday
+## 3   0.1321 2012-10-01       10 Monday
+```
+
+```r
+# we only want the levels "weekday" and "weekend". Current levels
+levels(newdf2$day)
+```
+
+```
+## [1] "Friday"    "Monday"    "Saturday"  "Sunday"    "Thursday"  "Tuesday"  
+## [7] "Wednesday"
+```
+
+```r
+# change levels
+levels(newdf2$day)<-list("weekday" = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), "weekend" =c("Saturday", "Sunday"))
+# new levels
+levels(newdf2$day)
+```
+
+```
+## [1] "weekday" "weekend"
+```
+
+```r
+head(newdf2,3)
+```
+
+```
+##   allsteps      dates interval     day
+## 1   1.7170 2012-10-01        0 weekday
+## 2   0.3396 2012-10-01        5 weekday
+## 3   0.1321 2012-10-01       10 weekday
+```
+2. *Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis)*
+
+```r
+# obtain mean steps for newdf2 by day and interval
+summary<-aggregate.data.frame(x = newdf2$allsteps, by = list(newdf2$day, newdf2$interval), FUN = mean)
+names(summary)<-c("day", "interval", "avSteps")
+head(summary)
+```
+
+```
+##       day interval avSteps
+## 1 weekday        0 2.25115
+## 2 weekend        0 0.21462
+## 3 weekday        5 0.44528
+## 4 weekend        5 0.04245
+## 5 weekday       10 0.17317
+## 6 weekend       10 0.01651
+```
+
+```r
+require(lattice)
+```
+
+```
+## Loading required package: lattice
+```
+
+```r
+summary<-transform(summary, day=factor(day))
+xyplot(x = avSteps~interval|day,data = summary, xlab = "interval", ylab = "number of steps", type ="l", layout = c(1,2))
+```
+
+![plot of chunk unnamed-chunk-16](./PA1_template_files/figure-html/unnamed-chunk-16.png) 

@@ -4,7 +4,7 @@ output:
   html_document:
     keep_md: true
 ---
-The following is an analysis of the data from a personal activity device. This analysis was conducted as a project for the Reproducible Reserach class offered through Coursera. The data was forked from the github repository <https://github.com/rdpeng/RepData_PeerAssessment1>, and the analysis was guided by specific questions that can be found in the README
+The following is an analysis of the data from a personal activity monitoring device. This analysis was conducted as a project for the Reproducible Research class offered through Coursera. The data was forked from the github repository <https://github.com/rdpeng/RepData_PeerAssessment1>, and the analysis was guided by specific questions that can be found in the README
 
 ## Loading and preprocessing the data
 1. *Load the data (i.e. read.csv())*
@@ -28,9 +28,9 @@ allStepsByDay<-split(activitydata$steps, activitydata$date)
 # sum all steps in each day
 stepSumByDay<-lapply(X = allStepsByDay, FUN = sum) 
 # extract all values from list
-totalStepsByDay<-matrix(unlist(stepSumByDay),ncol=1) 
+stepSumByDay<-matrix(unlist(stepSumByDay),ncol=1) 
 # plot histogram of extracted values
-hist(totalStepsByDay, xlab = "total number of steps recorded each day", main = "Histogram of total recorded steps between 1/10/2012 and 30/11/2012")
+hist(stepSumByDay, xlab = "total number of steps recorded each day", main = "Histogram of total recorded steps between 1/10/2012 and 30/11/2012")
 ```
 
 2. *Calculate and report the mean and median total number of steps taken per day*  
@@ -38,12 +38,12 @@ hist(totalStepsByDay, xlab = "total number of steps recorded each day", main = "
 #for each day, calculate the mean of the steps taken
 stepMeans<-lapply(X = allStepsByDay, function(x) mean(x, na.rm = T))
 ```
-On any day, there are many five-minute intervals for which the number of steps recorded is 0. To accurately find the median number of steps taken *throughout the day*, these 0s must first be discarded. 
+On any day, there are many five-minute intervals for which the number of steps recorded is 0. To accurately find the median number of *steps taken*, these 0s must first be discarded. 
 ```{r}
-#copy activitydata to nonZeroData
+# copy activitydata to nonZeroData and change all 0 values in nonZeroData$steps to NAs
 nonZeroStepData<-activitydata
-#change all 0 values in nonZeroData$steps to NAs 
-nonZeroStepData$steps[nonZeroStepData$steps==0]<-NA 
+nonZeroStepData$steps[nonZeroStepData$steps==0]<-NA
+# split the processed step record by day
 nonZeroStepsByDay<-split(nonZeroStepData$steps, nonZeroStepData$date)
 # Calculate the median for each day
 stepMedians<-lapply(X = nonZeroStepsByDay, function(x) median(x, na.rm = T))
@@ -52,7 +52,7 @@ stepMedians<-lapply(X = nonZeroStepsByDay, function(x) median(x, na.rm = T))
 The following table presents the mean and median number of steps taken for each day
 ```{r}
 meanAndMeds<-as.data.frame(cbind(stepMeans, stepMedians))
-head(meanAndMeds, 5)
+list(HEAD = head(meanAndMeds,5), TAIL = tail(meanAndMeds,5))
 ```
 
 
@@ -60,8 +60,11 @@ head(meanAndMeds, 5)
 
 1. *Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)*
 ```{r}
-dataByInterval<-split(activitydata$steps, activitydata$interval)
-avStepsByInterval<-lapply(dataByInterval, function(x) mean(x, na.rm = T))
+# obtain the step record for each interval
+stepsByInterval<-split(activitydata$steps, activitydata$interval)
+# calculate the average number of steps per interval
+avStepsByInterval<-lapply(stepsByInterval, function(x) mean(x, na.rm = T))
+# create time-series plot
 plot(x = unique(activitydata$interval),y = avStepsByInterval, type="l", xlab = "Five Minute Intervals", ylab = "Average number of steps taken", main = "Time series plot of interval vs average steps")
 ```
 
@@ -77,14 +80,14 @@ indMax<-which(avStepsByInterval %in% maxAv)
 # use the index to find the interval
 lower<-unique(activitydata$interval)[indMax]
 upper<-lower+5
-paste("The interval containing the maximum number of steps is", lower, "(to", upper, "), and the maximum average number of steps is", maxAv, sep = " ")
+paste("The 5 minute interval containing the maximum number of steps is", lower, "(to", upper, "), and the maximum average number of steps is", maxAv, sep = " ")
 
 ```
 
 ## Imputing missing values
 1. *Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)*  
 
-It makes sense that NAs only occur in steps, with all other data being automatically recorded by the device. Thus, the total number of rows with NAs is given by
+NAs only occur in steps, with all other data being automatically recorded by the device. Thus, the total number of rows with NAs is given by
 ```{r}
 sum(is.na(activitydata$steps))
 ```
@@ -93,48 +96,50 @@ sum(is.na(activitydata$steps))
 Recalling the heuristics that  
 -the median is most useful for describing the center of skewed distributions  
 -the mean is most useful for describing symmetric distributions  
--the ratio of the mean to the median is a measure of skewness, ie: when $\frac{mean}{median}\approx1$, the distribution is symmetric; else, it is left- or right-skewed
+-the ratio of the mean to the median is a measure of skewness, i,e,: when $\frac{mean}{median}\approx1$, the distribution is symmetric; else, it is left- or right-skewed
 
 the following imputation strategy is proposed:  
-1. in each interval, use the ratio of mean to median to decide the skewness of the distribution  
-2. replace NAs by the mean value of the interval if the ratio of mean to median in that interval is between 0.8 and 1.2  
-3. otherwise, replace NAs with the median value of the interval  
-However, after processing, many intervals will be composed of NAs only, perhaps indicating a period of regular non-movement (as in travelling to work). 
+1. in each interval, use the ratio of mean to median to decide the skewness of the distribution of steps in that interval  
+2. replace NAs by the mean value of the interval if the ratio of mean to median in that interval is between 0.9 and 1.1  
+3. otherwise, replace NAs with the median value of the interval, unless the median value is itself NA, in which case we use the mean, which will be 0. 
+
 ```{r}
-# split nonZeroStepData (previously computed) to get data by interval
+# split nonZeroStepData (=activity data with 0s replaced by NAs) by interval
 nonZeroStepsByInterval<-split(nonZeroStepData$steps, nonZeroStepData$interval)
-nonZeroStepsByInterval[9]
-```
-In such cases, the median will be NA, and so will the ratio of mean to median. Then, NAs are replaced by the mean. 
-```{r}
 # Calculate the median for each interval
 intervalStepMedians<-lapply(X = nonZeroStepsByInterval, function(x) median(x, na.rm = T))
 #calculate the ratio of mean to median
 intervalStepMedians<-matrix(unlist(intervalStepMedians), ncol = 1)
 ratios<-as.vector(avStepsByInterval/intervalStepMedians)
+# replace NAs using the imputation procedure
 for (i in (1:length(ratios))){
         if (is.na(ratios[i])){
-                dataByInterval[[i]][which(is.na(dataByInterval[[i]]) %in% T)]<-avStepsByInterval[i]
-        }else if(ratios[i] < 0.8){ 
-                dataByInterval[[i]][which(is.na(dataByInterval[[i]]) %in% T)]<-avStepsByInterval[i]
-        }else if (ratios[i] > 1.2){
-                dataByInterval[[i]][which(is.na(dataByInterval[[i]]) %in% T)]<-avStepsByInterval[i]
+                stepsByInterval[[i]][which(is.na(stepsByInterval[[i]]) %in% T)]<-avStepsByInterval[i]
+        }else if(ratios[i] < 0.9){ 
+                stepsByInterval[[i]][which(is.na(stepsByInterval[[i]]) %in% T)]<-avStepsByInterval[i]
+        }else if (ratios[i] > 1.1){
+                stepsByInterval[[i]][which(is.na(stepsByInterval[[i]]) %in% T)]<-avStepsByInterval[i]
         }else {
-             dataByInterval[[i]][which(is.na(dataByInterval[[i]]) %in% T)]<-intervalStepMedians[i]
+             stepsByInterval[[i]][which(is.na(stepsByInterval[[i]]) %in% T)]<-intervalStepMedians[i]
         }
 }
-#check that the missing data is successfully imputed
-dataByInterval[10]
 ```
 
 3. *Create a new dataset that is equal to the original dataset but with the missing data filled in.*
 ```{r}
-allsteps<-unsplit(dataByInterval, activitydata$interval)
+allsteps<-unsplit(stepsByInterval, activitydata$interval)
+steps<-activitydata$steps
 dates<-activitydata$date
 interval<-activitydata$interval
 newdf<-data.frame(allsteps, dates, interval)
+ 
+# sanity check
+df2<-data.frame(steps, allsteps, dates, interval)
+list(HEAD = head(df2,3), MID = df2[800:802,], TAIL = tail(df2,3))
 ```
-4. *Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day*  
+4. *Make a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day*  
+
+Create histogram
 ```{r}
 # split the step record by day
 newAllStepsByDay<-split(newdf$allsteps, newdf$date)
@@ -144,20 +149,62 @@ newStepSumByDay<-lapply(X = newAllStepsByDay, FUN = sum)
 newTotalStepsByDay<-matrix(unlist(newStepSumByDay),ncol=1) 
 # plot histogram of extracted values
 hist(newTotalStepsByDay, xlab = "total number of steps recorded each day", main = "Total recorded steps between 1/10/2012 and 30/11/2012 (NA replaced)")
-```{r}
-#for each day, calculate the mean of the steps taken
-newStepMeans<-lapply(X = newAllStepsByDay, function(x) mean(x, na.rm = T))
-#copy activitydata to nonZeroData
-newNonZeroStepData<-newdf
-#change all 0 values in nonZeroData$steps to NAs 
-newNonZeroStepData$steps[newNonZeroStepData$allsteps==0]<-NA 
-newNonZeroStepsByDay<-split(newNonZeroStepData$allsteps, 
-                            newNonZeroStepData$date)
-# Calculate the median for each day
-newStepMedians<-lapply(X = newNonZeroStepsByDay, 
-                       function(x) median(x, na.rm = T))
-newMeanAndMeds<-as.data.frame(cbind(newStepMeans, newStepMedians, stepMeans, stepMedians))
-head(newMeanAndMeds, 200)
 ```
+Calculate mean and median after imputation
+```{r}
+# compute means as before
+IMallStepsByDay<-split(newdf$allsteps, newdf$dates)
+IMstepMeans<-lapply(X = IMallStepsByDay, function(x) mean(x, na.rm = T))
 
-## Are there differences in activity patterns between weekdays and weekends?
+# compute medians as before
+nznewdf<-newdf
+nznewdf$allsteps[floor(nznewdf$allsteps)==0]<-NA
+IMnzStepData<-split(nznewdf$allsteps, nznewdf$dates)
+IMstepMedians<-lapply(IMnzStepData, function(x) median(x, na.rm = T))
+
+# display with unimputed means and medians
+meanAndMeds2<-as.data.frame(cbind(stepMeans, IMstepMeans, stepMedians, IMstepMedians))
+list(HEAD = head(meanAndMeds2,8), TAIL = tail(meanAndMeds2,5))
+```
+*Do these values differ from the estimates from the first part of the assignment?*  
+There are no differences in the means and medians of the imputed and unimputed data, with the exception of the NAs/NaNs of the latter being replaced. 
+K  
+*What is the impact of imputing missing data on the estimates of the total daily number of steps?*
+```{r}
+unimputed<-sum(stepSumByDay, na.rm = T)
+imputed<-sum(newTotalStepsByDay, na.rm = T)
+absdiff<-abs(unimputed-imputed)
+data.frame(unimputed, imputed, absdiff)
+```
+Imputing missing data increases the total number of daily steps by 86454. This is reflected in the higher frequencies of the histogram of the imputed data: 
+```{r}
+par(mfrow=c(1,2))
+hist(stepSumByDay, xlab = "total number of steps recorded each day", main = "Unimputed")
+hist(newTotalStepsByDay, xlab = "total number of steps recorded each day", main = "Imputed")
+```
+## Are there differences in activity patterns between weekdays and weekends?  
+1. *Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.*
+```{r}
+# copy the data for imputed values
+newdf2<-newdf
+# create a new factor in newdf2 called day. 
+newdf2$day<-as.factor(weekdays(as.Date(newdf2$dates)))
+head(newdf2, 3)
+# we only want the levels "weekday" and "weekend". Current levels
+levels(newdf2$day)
+# change levels
+levels(newdf2$day)<-list("weekday" = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), "weekend" =c("Saturday", "Sunday"))
+# new levels
+levels(newdf2$day)
+head(newdf2,3)
+```
+2. *Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis)*
+```{r}
+# obtain mean steps for newdf2 by day and interval
+summary<-aggregate.data.frame(x = newdf2$allsteps, by = list(newdf2$day, newdf2$interval), FUN = mean)
+names(summary)<-c("day", "interval", "avSteps")
+head(summary)
+require(lattice)
+summary<-transform(summary, day=factor(day))
+xyplot(x = avSteps~interval|day,data = summary, xlab = "interval", ylab = "number of steps", type ="l", layout = c(1,2))
+```
