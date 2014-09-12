@@ -27,7 +27,8 @@ stepSumByDay<-lapply(X = allStepsByDay, FUN = sum)
 # extract all values from list
 stepSumByDay<-matrix(unlist(stepSumByDay),ncol=1) 
 # plot histogram of extracted values
-hist(stepSumByDay, xlab = "total number of steps recorded each day", main = "Histogram of total recorded steps between 1/10/2012 and 30/11/2012")
+hist(stepSumByDay, xlab = "total number of steps recorded each day", 
+     main = "Histogram of total recorded steps between 1/10/2012 and 30/11/2012")
 ```
 
 ![plot of chunk unnamed-chunk-2](./PA1_template_files/figure-html/unnamed-chunk-2.png) 
@@ -38,7 +39,7 @@ hist(stepSumByDay, xlab = "total number of steps recorded each day", main = "His
 #for each day, calculate the mean of the steps taken
 stepMeans<-lapply(X = allStepsByDay, function(x) mean(x, na.rm = T))
 ```
-On any day, there are many five-minute intervals for which the number of steps recorded is 0. To accurately find the median number of *steps taken*, these 0s must first be discarded. 
+On any day, there are many five-minute intervals for which the number of steps recorded is 0. To accurately find the median number of steps taken, these 0s must first be discarded. 
 
 ```r
 # copy activitydata to nonZeroData and change all 0 values in nonZeroData$steps to NAs
@@ -104,7 +105,9 @@ indMax<-which(avStepsByInterval %in% maxAv)
 # use the index to find the interval
 lower<-unique(activitydata$interval)[indMax]
 upper<-lower+5
-paste("The 5 minute interval containing the maximum number of steps is", lower, "(to", upper, "), and the maximum average number of steps is", maxAv, sep = " ")
+paste("The 5 minute interval containing the maximum number of steps is",
+      lower, "(to", upper, 
+      "), and the maximum average number of steps is", maxAv, sep = " ")
 ```
 
 ```
@@ -133,7 +136,7 @@ Recalling the heuristics that
 the following imputation strategy is proposed:  
 1. in each interval, use the ratio of mean to median to decide the skewness of the distribution of steps in that interval  
 2. replace NAs by the mean value of the interval if the ratio of mean to median in that interval is between 0.9 and 1.1  
-3. otherwise, replace NAs with the median value of the interval, unless the median value is itself NA, in which case we use the mean, which will be 0. 
+3. otherwise, replace NAs with the median value of the interval, unless the median value is itself NA, in which case we use the mean. 
 
 
 ```r
@@ -166,30 +169,6 @@ steps<-activitydata$steps
 dates<-activitydata$date
 interval<-activitydata$interval
 newdf<-data.frame(allsteps, dates, interval)
- 
-# sanity check
-df2<-data.frame(steps, allsteps, dates, interval)
-list(HEAD = head(df2,3), MID = df2[800:802,], TAIL = tail(df2,3))
-```
-
-```
-## $HEAD
-##   steps allsteps      dates interval
-## 1    NA   1.7170 2012-10-01        0
-## 2    NA   0.3396 2012-10-01        5
-## 3    NA   0.1321 2012-10-01       10
-## 
-## $MID
-##     steps allsteps      dates interval
-## 800    26       26 2012-10-03     1835
-## 801    22       22 2012-10-03     1840
-## 802     0        0 2012-10-03     1845
-## 
-## $TAIL
-##       steps allsteps      dates interval
-## 17566    NA   0.6415 2012-11-30     2345
-## 17567    NA   0.2264 2012-11-30     2350
-## 17568    NA   1.0755 2012-11-30     2355
 ```
 4. *Make a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day*  
 
@@ -203,10 +182,12 @@ newStepSumByDay<-lapply(X = newAllStepsByDay, FUN = sum)
 # extract all values from list
 newTotalStepsByDay<-matrix(unlist(newStepSumByDay),ncol=1) 
 # plot histogram of extracted values
-hist(newTotalStepsByDay, xlab = "total number of steps recorded each day", main = "Total recorded steps between 1/10/2012 and 30/11/2012 (NA replaced)")
+hist(newTotalStepsByDay, xlab = "total number of steps recorded each day",
+     main = "Total recorded steps between 1/10/2012 and 30/11/2012 (NA replaced)")
 ```
 
 ![plot of chunk unnamed-chunk-11](./PA1_template_files/figure-html/unnamed-chunk-11.png) 
+
 Calculate mean and median after imputation
 
 ```r
@@ -247,7 +228,7 @@ list(HEAD = head(meanAndMeds2,8), TAIL = tail(meanAndMeds2,5))
 ```
 *Do these values differ from the estimates from the first part of the assignment?*  
 There are no differences in the means and medians of the imputed and unimputed data, with the exception of the NAs/NaNs of the latter being replaced. 
-K  
+
 *What is the impact of imputing missing data on the estimates of the total daily number of steps?*
 
 ```r
@@ -278,17 +259,6 @@ hist(newTotalStepsByDay, xlab = "total number of steps recorded each day", main 
 newdf2<-newdf
 # create a new factor in newdf2 called day. 
 newdf2$day<-as.factor(weekdays(as.Date(newdf2$dates)))
-head(newdf2, 3)
-```
-
-```
-##   allsteps      dates interval    day
-## 1   1.7170 2012-10-01        0 Monday
-## 2   0.3396 2012-10-01        5 Monday
-## 3   0.1321 2012-10-01       10 Monday
-```
-
-```r
 # we only want the levels "weekday" and "weekend". Current levels
 levels(newdf2$day)
 ```
@@ -300,7 +270,8 @@ levels(newdf2$day)
 
 ```r
 # change levels
-levels(newdf2$day)<-list("weekday" = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), "weekend" =c("Saturday", "Sunday"))
+levels(newdf2$day)<-list("weekday" = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), 
+                         "weekend" =c("Saturday", "Sunday"))
 # new levels
 levels(newdf2$day)
 ```
@@ -324,21 +295,18 @@ head(newdf2,3)
 ```r
 # obtain mean steps for newdf2 by day and interval
 summary<-aggregate.data.frame(x = newdf2$allsteps, by = list(newdf2$day, newdf2$interval), FUN = mean)
-names(summary)<-c("day", "interval", "avSteps")
-head(summary)
+head(summary, 3)
 ```
 
 ```
-##       day interval avSteps
-## 1 weekday        0 2.25115
-## 2 weekend        0 0.21462
-## 3 weekday        5 0.44528
-## 4 weekend        5 0.04245
-## 5 weekday       10 0.17317
-## 6 weekend       10 0.01651
+##   Group.1 Group.2      x
+## 1 weekday       0 2.2512
+## 2 weekend       0 0.2146
+## 3 weekday       5 0.4453
 ```
 
 ```r
+names(summary)<-c("day", "interval", "avSteps")
 require(lattice)
 ```
 
@@ -348,7 +316,10 @@ require(lattice)
 
 ```r
 summary<-transform(summary, day=factor(day))
-xyplot(x = avSteps~interval|day,data = summary, xlab = "interval", ylab = "number of steps", type ="l", layout = c(1,2))
+xyplot(x = avSteps~interval|day,data = summary, 
+       xlab = "Interval", ylab = "Number of Steps", type ="l", 
+       layout = c(1,2))
 ```
 
 ![plot of chunk unnamed-chunk-16](./PA1_template_files/figure-html/unnamed-chunk-16.png) 
+There is a clear increase in the number of steps taken during midday over the weekend, compared to midday over weekdays. This is to be expected, as people have more opportunity to be active over the weekends. 
