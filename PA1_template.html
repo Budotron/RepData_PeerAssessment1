@@ -157,7 +157,7 @@ paste(&quot;The 5 minute interval containing the maximum number of steps is&quot
 <ol start="2" style="list-style-type: decimal">
 <li><em>Devise a strategy for filling in all of the missing values in the dataset. </em></li>
 </ol>
-<p>Recalling the heuristics that<br />-the median is most useful for describing the center of skewed distributions<br />-the mean is most useful for describing symmetric distributions<br />-the ratio of the mean to the median is a measure of skewness, i,e,: when mean/median is approximately 1, the distribution is symmetric; else, it is left- or right-skewed</p>
+<p>Recalling the heuristics that<br />-the median is most useful for describing the center of skewed distributions<br />-the mean is most useful for describing symmetric distributions<br />-the ratio of the mean to the median is a measure of skewness, i,e,: when mean/median is approximately equal to 1, the distribution is symmetric; else, it is left- or right-skewed</p>
 <p>the following imputation strategy is proposed:<br />1. in each interval, use the ratio of mean to median to decide the skewness of the distribution of steps in that interval<br />2. replace NAs by the mean value of the interval if the ratio of mean to median in that interval is between 0.9 and 1.1<br />3. otherwise, replace NAs with the median value of the interval, unless the median value is itself NA, in which case we use the mean.</p>
 <pre class="r"><code># split nonZeroStepData (=activity data with 0s replaced by NAs) by interval
 nonZeroStepsByInterval&lt;-split(nonZeroStepData$steps, nonZeroStepData$interval)
