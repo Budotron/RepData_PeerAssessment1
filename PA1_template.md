@@ -172,6 +172,106 @@ dataByInterval[10]
 
 3. *Create a new dataset that is equal to the original dataset but with the missing data filled in.*
 
+```r
+allsteps<-unsplit(dataByInterval, activitydata$interval)
+dates<-activitydata$date
+interval<-activitydata$interval
+newdf<-data.frame(allsteps, dates, interval)
+```
+4. *Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day*  
 
+```r
+# split the step record by day
+newAllStepsByDay<-split(newdf$allsteps, newdf$date)
+# sum all steps in each day
+newStepSumByDay<-lapply(X = newAllStepsByDay, FUN = sum) 
+# extract all values from list
+newTotalStepsByDay<-matrix(unlist(newStepSumByDay),ncol=1) 
+# plot histogram of extracted values
+hist(newTotalStepsByDay, xlab = "total number of steps recorded each day", main = "Total recorded steps between 1/10/2012 and 30/11/2012 (NA replaced)")
+```
+
+![plot of chunk unnamed-chunk-12](./PA1_template_files/figure-html/unnamed-chunk-12.png) 
+
+```r
+#for each day, calculate the mean of the steps taken
+newStepMeans<-lapply(X = newAllStepsByDay, function(x) mean(x, na.rm = T))
+#copy activitydata to nonZeroData
+newNonZeroStepData<-newdf
+#change all 0 values in nonZeroData$steps to NAs 
+newNonZeroStepData$steps[newNonZeroStepData$allsteps==0]<-NA 
+newNonZeroStepsByDay<-split(newNonZeroStepData$allsteps, 
+                            newNonZeroStepData$date)
+# Calculate the median for each day
+newStepMedians<-lapply(X = newNonZeroStepsByDay, 
+                       function(x) median(x, na.rm = T))
+newMeanAndMeds<-as.data.frame(cbind(newStepMeans, newStepMedians, stepMeans, stepMedians))
+head(newMeanAndMeds, 200)
+```
+
+```
+##            newStepMeans newStepMedians stepMeans stepMedians
+## 2012-10-01        37.86          34.88       NaN          NA
+## 2012-10-02       0.4375              0    0.4375          63
+## 2012-10-03        39.42              0     39.42          61
+## 2012-10-04        42.07              0     42.07        56.5
+## 2012-10-05        46.16              0     46.16          66
+## 2012-10-06        53.54              0     53.54          67
+## 2012-10-07        38.25              0     38.25        52.5
+## 2012-10-08        37.86          34.88       NaN          NA
+## 2012-10-09        44.48              0     44.48          48
+## 2012-10-10        34.38              0     34.38        56.5
+## 2012-10-11        35.78              0     35.78          35
+## 2012-10-12        60.35              0     60.35          46
+## 2012-10-13        43.15              0     43.15        45.5
+## 2012-10-14        52.42              0     52.42        60.5
+## 2012-10-15         35.2              0      35.2          54
+## 2012-10-16        52.38              0     52.38          64
+## 2012-10-17        46.71              0     46.71        61.5
+## 2012-10-18        34.92              0     34.92        52.5
+## 2012-10-19        41.07              0     41.07          74
+## 2012-10-20        36.09              0     36.09          49
+## 2012-10-21        30.63              0     30.63          48
+## 2012-10-22        46.74              0     46.74          52
+## 2012-10-23        30.97              0     30.97          56
+## 2012-10-24        29.01              0     29.01        51.5
+## 2012-10-25        8.653              0     8.653          35
+## 2012-10-26        23.53              0     23.53        36.5
+## 2012-10-27        35.14              0     35.14          72
+## 2012-10-28        39.78              0     39.78          61
+## 2012-10-29        17.42              0     17.42        54.5
+## 2012-10-30        34.09              0     34.09          40
+## 2012-10-31        53.52              0     53.52        83.5
+## 2012-11-01        37.86          34.88       NaN          NA
+## 2012-11-02        36.81              0     36.81        55.5
+## 2012-11-03         36.7              0      36.7          59
+## 2012-11-04        37.86          34.88       NaN          NA
+## 2012-11-05        36.25              0     36.25          66
+## 2012-11-06        28.94              0     28.94          52
+## 2012-11-07        44.73              0     44.73          58
+## 2012-11-08        11.18              0     11.18        42.5
+## 2012-11-09        37.86          34.88       NaN          NA
+## 2012-11-10        37.86          34.88       NaN          NA
+## 2012-11-11        43.78              0     43.78          55
+## 2012-11-12        37.38              0     37.38          42
+## 2012-11-13        25.47              0     25.47          57
+## 2012-11-14        37.86          34.88       NaN          NA
+## 2012-11-15       0.1424              0    0.1424        20.5
+## 2012-11-16        18.89              0     18.89          43
+## 2012-11-17        49.79              0     49.79        65.5
+## 2012-11-18        52.47              0     52.47          80
+## 2012-11-19         30.7              0      30.7          34
+## 2012-11-20        15.53              0     15.53          58
+## 2012-11-21         44.4              0      44.4          55
+## 2012-11-22        70.93              0     70.93          65
+## 2012-11-23        73.59              0     73.59         113
+## 2012-11-24        50.27              0     50.27        65.5
+## 2012-11-25        41.09              0     41.09          84
+## 2012-11-26        38.76              0     38.76          53
+## 2012-11-27        47.38              0     47.38          57
+## 2012-11-28        35.36              0     35.36          70
+## 2012-11-29        24.47              0     24.47        44.5
+## 2012-11-30        37.86          34.88       NaN          NA
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?

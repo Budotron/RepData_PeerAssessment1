@@ -128,7 +128,36 @@ dataByInterval[10]
 ```
 
 3. *Create a new dataset that is equal to the original dataset but with the missing data filled in.*
-
-
+```{r}
+allsteps<-unsplit(dataByInterval, activitydata$interval)
+dates<-activitydata$date
+interval<-activitydata$interval
+newdf<-data.frame(allsteps, dates, interval)
+```
+4. *Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day*  
+```{r}
+# split the step record by day
+newAllStepsByDay<-split(newdf$allsteps, newdf$date)
+# sum all steps in each day
+newStepSumByDay<-lapply(X = newAllStepsByDay, FUN = sum) 
+# extract all values from list
+newTotalStepsByDay<-matrix(unlist(newStepSumByDay),ncol=1) 
+# plot histogram of extracted values
+hist(newTotalStepsByDay, xlab = "total number of steps recorded each day", main = "Total recorded steps between 1/10/2012 and 30/11/2012 (NA replaced)")
+```{r}
+#for each day, calculate the mean of the steps taken
+newStepMeans<-lapply(X = newAllStepsByDay, function(x) mean(x, na.rm = T))
+#copy activitydata to nonZeroData
+newNonZeroStepData<-newdf
+#change all 0 values in nonZeroData$steps to NAs 
+newNonZeroStepData$steps[newNonZeroStepData$allsteps==0]<-NA 
+newNonZeroStepsByDay<-split(newNonZeroStepData$allsteps, 
+                            newNonZeroStepData$date)
+# Calculate the median for each day
+newStepMedians<-lapply(X = newNonZeroStepsByDay, 
+                       function(x) median(x, na.rm = T))
+newMeanAndMeds<-as.data.frame(cbind(newStepMeans, newStepMedians, stepMeans, stepMedians))
+head(newMeanAndMeds, 200)
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
