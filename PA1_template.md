@@ -295,14 +295,17 @@ head(newdf2,3)
 ```r
 # obtain mean steps for newdf2 by day and interval
 summary<-aggregate.data.frame(x = newdf2$allsteps, by = list(newdf2$day, newdf2$interval), FUN = mean)
-head(summary, 3)
+head(summary)
 ```
 
 ```
-##   Group.1 Group.2      x
-## 1 weekday       0 2.2512
-## 2 weekend       0 0.2146
-## 3 weekday       5 0.4453
+##   Group.1 Group.2       x
+## 1 weekday       0 2.25115
+## 2 weekend       0 0.21462
+## 3 weekday       5 0.44528
+## 4 weekend       5 0.04245
+## 5 weekday      10 0.17317
+## 6 weekend      10 0.01651
 ```
 
 ```r
@@ -322,4 +325,5 @@ xyplot(x = avSteps~interval|day,data = summary,
 ```
 
 ![plot of chunk unnamed-chunk-16](./PA1_template_files/figure-html/unnamed-chunk-16.png) 
-There is a clear increase in the number of steps taken during midday over the weekend, compared to midday over weekdays. This is to be expected, as people have more opportunity to be active over the weekends. 
+
+There is a clear increase in the average number of steps taken during midday over the weekend, compared to midday over weekdays. This is to be expected, as people have more opportunity to be active over the weekends. 

@@ -203,7 +203,7 @@ head(newdf2,3)
 ```{r}
 # obtain mean steps for newdf2 by day and interval
 summary<-aggregate.data.frame(x = newdf2$allsteps, by = list(newdf2$day, newdf2$interval), FUN = mean)
-head(summary, 3)
+head(summary)
 names(summary)<-c("day", "interval", "avSteps")
 require(lattice)
 summary<-transform(summary, day=factor(day))
@@ -211,4 +211,5 @@ xyplot(x = avSteps~interval|day,data = summary,
        xlab = "Interval", ylab = "Number of Steps", type ="l", 
        layout = c(1,2))
 ```
-There is a clear increase in the number of steps taken during midday over the weekend, compared to midday over weekdays. This is to be expected, as people have more opportunity to be active over the weekends. 
+
+There is a clear increase in the average number of steps taken during midday over the weekend, compared to midday over weekdays. This is to be expected, as people have more opportunity to be active over the weekends. 
