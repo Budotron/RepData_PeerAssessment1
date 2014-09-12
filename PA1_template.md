@@ -131,7 +131,7 @@ sum(is.na(activitydata$steps))
 Recalling the heuristics that  
 -the median is most useful for describing the center of skewed distributions  
 -the mean is most useful for describing symmetric distributions  
--the ratio of the mean to the median is a measure of skewness, i,e,: when $\frac{mean}{median}\approx1$, the distribution is symmetric; else, it is left- or right-skewed
+-the ratio of the mean to the median is a measure of skewness, i,e,: when mean/median is approximately 1, the distribution is symmetric; else, it is left- or right-skewed
 
 the following imputation strategy is proposed:  
 1. in each interval, use the ratio of mean to median to decide the skewness of the distribution of steps in that interval  
