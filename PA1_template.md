@@ -5,8 +5,8 @@ The following is an analysis of the data from a personal activity monitoring dev
 1. *Load the data (i.e. read.csv())*
 
 ```r
-# create a data frame from the read file, unless this step has 
-# already been done
+# unless this step has already been done, unzip the file activity.zip, 
+# and read in the data
 if (!exists("activitydata")){
         file<-unzip("activity.zip")
         activitydata<-read.csv(file = file, header = T, 

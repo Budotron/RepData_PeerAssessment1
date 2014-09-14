@@ -9,15 +9,15 @@ The following is an analysis of the data from a personal activity monitoring dev
 ## Loading and preprocessing the data
 1. *Load the data (i.e. read.csv())*
 ```{r}
-# create a data frame from the read file, unless this step has 
-# already been done
+# unless this step has already been done, unzip the file activity.zip, 
+# and read in the data
 if (!exists("activitydata")){
         file<-unzip("activity.zip")
         activitydata<-read.csv(file = file, header = T, 
                                sep = ",", na.strings="NA")
 }
 ```
-The activitydata data frame spans 1/10/2012 through 30/11/2012.   
+All processing of data is simple enough to be handled in-question for the subsequent questions  
 
 ## What is mean total number of steps taken per day?  
 1. *Make a histogram of the total number of steps taken each day*  

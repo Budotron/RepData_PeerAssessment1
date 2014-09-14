@@ -61,8 +61,8 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <ol style="list-style-type: decimal">
 <li><em>Load the data (i.e. read.csv())</em></li>
 </ol>
-<pre class="r"><code># create a data frame from the read file, unless this step has 
-# already been done
+<pre class="r"><code># unless this step has already been done, unzip the file activity.zip, 
+# and read in the data
 if (!exists(&quot;activitydata&quot;)){
         file&lt;-unzip(&quot;activity.zip&quot;)
         activitydata&lt;-read.csv(file = file, header = T, 
