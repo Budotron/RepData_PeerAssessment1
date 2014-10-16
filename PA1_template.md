@@ -1,19 +1,48 @@
-# Reproducible Research: Peer Assessment 1
+---
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  html_document:
+    keep_md: true
+---
 The following is an analysis of the data from a personal activity monitoring device. This analysis was conducted as a project for the Reproducible Research class offered through Coursera. The data was forked from the github repository <https://github.com/rdpeng/RepData_PeerAssessment1>, and the analysis was guided by specific questions that can be found in the README
 
-## Loading and preprocessing the data
-1. *Load the data (i.e. read.csv())*
+## Downloading, reading in,  and preprocessing the data
+1. *Load the data (i.e. ```read.csv()```)*
 
 ```r
-# unless this step has already been done, unzip the file activity.zip, 
-# and read in the data
-if (!exists("activitydata")){
-        file<-unzip("activity.zip")
-        activitydata<-read.csv(file = file, header = T, 
-                               sep = ",", na.strings="NA")
+# function getdata() checks for the existence of a directory containing a file to 
+# be downloaded, and if it is not present, downloads a linked file and stores it 
+# in a directory in the current workspace. 
+#
+# input: a URL linked to a file to be downloaded, desired name for the 
+#        directory, desired name for the downloaded file, extension for the 
+#        file. 
+# output : the path to the downloaded file
+getdata<-function(fileUrl, dir, filename, ext){
+        # create directory, if it is not already present
+        dirName<-paste(dir, sep = "")
+        if(!file.exists(dirName)){
+                dir.create(path = dirName)
+        }
+        # Get the data, unless this step has already been done
+        dest<-paste("./", dirName,"/", filename, ext, sep = "")
+        if(!file.exists(dest)){
+                download.file(url = fileUrl, 
+                              destfile = dest, 
+                              method = "curl") 
+                datedownloaded<-date()
+        }
+        dest
 }
+fileURL<-"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+temp<-getdata(fileUrl = fileURL, 
+              dir = "activitydata", 
+              filename = "activity", 
+              ext = ".zip")
+# unzip and read the data into the current working directory
+activitydata<-read.csv(file = unzip(zipfile = temp), header = T, sep = ",", na.strings="NA")
 ```
-The activitydata data frame spans 1/10/2012 through 30/11/2012.   
+All processing of data is simple enough to be handled in-question for the subsequent questions  
 
 ## What is mean total number of steps taken per day?  
 1. *Make a histogram of the total number of steps taken each day*  
@@ -31,7 +60,7 @@ hist(stepSumByDay, xlab = "total number of steps recorded each day",
      main = "Histogram of total recorded steps between 1/10/2012 and 30/11/2012")
 ```
 
-![plot of chunk unnamed-chunk-2](./PA1_template_files/figure-html/unnamed-chunk-2.png) 
+![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2.png) 
 
 2. *Calculate and report the mean and median total number of steps taken per day*  
 
@@ -87,10 +116,15 @@ stepsByInterval<-split(activitydata$steps, activitydata$interval)
 # calculate the average number of steps per interval
 avStepsByInterval<-lapply(stepsByInterval, function(x) mean(x, na.rm = T))
 # create time-series plot
-plot(x = unique(activitydata$interval),y = avStepsByInterval, type="l", xlab = "Five Minute Intervals", ylab = "Average number of steps taken", main = "Time series plot of interval vs average steps")
+plot(x = unique(activitydata$interval),
+     y = avStepsByInterval, 
+     type="l", 
+     xlab = "Five Minute Intervals", 
+     ylab = "Average number of steps taken", 
+     main = "Time series plot of interval vs average steps")
 ```
 
-![plot of chunk unnamed-chunk-6](./PA1_template_files/figure-html/unnamed-chunk-6.png) 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6.png) 
 
 2. *Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?*
 
@@ -182,11 +216,12 @@ newStepSumByDay<-lapply(X = newAllStepsByDay, FUN = sum)
 # extract all values from list
 newTotalStepsByDay<-matrix(unlist(newStepSumByDay),ncol=1) 
 # plot histogram of extracted values
-hist(newTotalStepsByDay, xlab = "total number of steps recorded each day",
+hist(newTotalStepsByDay, 
+     xlab = "total number of steps recorded each day",
      main = "Total recorded steps between 1/10/2012 and 30/11/2012 (NA replaced)")
 ```
 
-![plot of chunk unnamed-chunk-11](./PA1_template_files/figure-html/unnamed-chunk-11.png) 
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11.png) 
 
 Calculate mean and median after imputation
 
@@ -202,7 +237,10 @@ IMnzStepData<-split(nznewdf$allsteps, nznewdf$dates)
 IMstepMedians<-lapply(IMnzStepData, function(x) median(x, na.rm = T))
 
 # display with unimputed means and medians
-meanAndMeds2<-as.data.frame(cbind(stepMeans, IMstepMeans, stepMedians, IMstepMedians))
+meanAndMeds2<-as.data.frame(cbind(stepMeans, 
+                                  IMstepMeans, 
+                                  stepMedians, 
+                                  IMstepMedians))
 list(HEAD = head(meanAndMeds2,8), TAIL = tail(meanAndMeds2,5))
 ```
 
@@ -246,11 +284,15 @@ Imputing missing data increases the total number of daily steps by 86454. This i
 
 ```r
 par(mfrow=c(1,2))
-hist(stepSumByDay, xlab = "total number of steps recorded each day", main = "Unimputed")
-hist(newTotalStepsByDay, xlab = "total number of steps recorded each day", main = "Imputed")
+hist(stepSumByDay, 
+     xlab = "total number of steps recorded each day",
+     main = "Unimputed")
+hist(newTotalStepsByDay, 
+     xlab = "total number of steps recorded each day", 
+     main = "Imputed")
 ```
 
-![plot of chunk unnamed-chunk-14](./PA1_template_files/figure-html/unnamed-chunk-14.png) 
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14.png) 
 ## Are there differences in activity patterns between weekdays and weekends?  
 1. *Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.*
 
@@ -311,19 +353,14 @@ head(summary)
 ```r
 names(summary)<-c("day", "interval", "avSteps")
 require(lattice)
-```
-
-```
-## Loading required package: lattice
-```
-
-```r
 summary<-transform(summary, day=factor(day))
-xyplot(x = avSteps~interval|day,data = summary, 
-       xlab = "Interval", ylab = "Number of Steps", type ="l", 
+xyplot(x = avSteps~interval|day,
+       data = summary, 
+       xlab = "Interval", 
+       ylab = "Number of Steps", type ="l", 
        layout = c(1,2))
 ```
 
-![plot of chunk unnamed-chunk-16](./PA1_template_files/figure-html/unnamed-chunk-16.png) 
+![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16.png) 
 
 There is a clear increase in the average number of steps taken during midday over the weekend, compared to midday over weekdays. This is to be expected, as people have more opportunity to be active over the weekends. 
