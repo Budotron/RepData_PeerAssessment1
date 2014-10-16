@@ -35,7 +35,10 @@ temp<-getdata(fileUrl = fileURL,
               filename = "activity", 
               ext = ".zip")
 # unzip and read the data into the current working directory
-activitydata<-read.csv(file = unzip(zipfile = temp), header = T, sep = ",", na.strings="NA")
+activitydata<-read.csv(file = unzip(zipfile = temp), 
+                       header = T, 
+                       sep = ",", 
+                       na.strings="NA")
 ```
 All processing of data is simple enough to be handled in-question for the subsequent questions  
 
@@ -51,7 +54,8 @@ stepSumByDay<-lapply(X = allStepsByDay, FUN = sum)
 # extract all values from list
 stepSumByDay<-matrix(unlist(stepSumByDay),ncol=1) 
 # plot histogram of extracted values
-hist(stepSumByDay, xlab = "total number of steps recorded each day", 
+hist(stepSumByDay, 
+     xlab = "total number of steps recorded each day", 
      main = "Histogram of total recorded steps between 1/10/2012 and 30/11/2012")
 ```
 
