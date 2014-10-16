@@ -247,7 +247,8 @@ summary<-transform(summary, day=factor(day))
 xyplot(x = avSteps~interval|day,
        data = summary, 
        xlab = "Interval", 
-       ylab = "Number of Steps", type ="l", 
+       ylab = "Number of Steps", 
+       type ="l", 
        layout = c(1,2))
 ```
 

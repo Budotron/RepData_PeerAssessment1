@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 The following is an analysis of the data from a personal activity monitoring device. This analysis was conducted as a project for the Reproducible Research class offered through Coursera. The data was forked from the github repository <https://github.com/rdpeng/RepData_PeerAssessment1>, and the analysis was guided by specific questions that can be found in the README
 
 ## Downloading, reading in,  and preprocessing the data
@@ -60,7 +55,7 @@ hist(stepSumByDay, xlab = "total number of steps recorded each day",
      main = "Histogram of total recorded steps between 1/10/2012 and 30/11/2012")
 ```
 
-![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2.png) 
+![plot of chunk unnamed-chunk-2](./PA1_template_files/figure-html/unnamed-chunk-2.png) 
 
 2. *Calculate and report the mean and median total number of steps taken per day*  
 
@@ -124,7 +119,7 @@ plot(x = unique(activitydata$interval),
      main = "Time series plot of interval vs average steps")
 ```
 
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6.png) 
+![plot of chunk unnamed-chunk-6](./PA1_template_files/figure-html/unnamed-chunk-6.png) 
 
 2. *Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?*
 
@@ -221,7 +216,7 @@ hist(newTotalStepsByDay,
      main = "Total recorded steps between 1/10/2012 and 30/11/2012 (NA replaced)")
 ```
 
-![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11.png) 
+![plot of chunk unnamed-chunk-11](./PA1_template_files/figure-html/unnamed-chunk-11.png) 
 
 Calculate mean and median after imputation
 
@@ -292,7 +287,7 @@ hist(newTotalStepsByDay,
      main = "Imputed")
 ```
 
-![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14.png) 
+![plot of chunk unnamed-chunk-14](./PA1_template_files/figure-html/unnamed-chunk-14.png) 
 ## Are there differences in activity patterns between weekdays and weekends?  
 1. *Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.*
 
@@ -353,14 +348,22 @@ head(summary)
 ```r
 names(summary)<-c("day", "interval", "avSteps")
 require(lattice)
+```
+
+```
+## Loading required package: lattice
+```
+
+```r
 summary<-transform(summary, day=factor(day))
 xyplot(x = avSteps~interval|day,
        data = summary, 
        xlab = "Interval", 
-       ylab = "Number of Steps", type ="l", 
+       ylab = "Number of Steps", 
+       type ="l", 
        layout = c(1,2))
 ```
 
-![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16.png) 
+![plot of chunk unnamed-chunk-16](./PA1_template_files/figure-html/unnamed-chunk-16.png) 
 
 There is a clear increase in the average number of steps taken during midday over the weekend, compared to midday over weekdays. This is to be expected, as people have more opportunity to be active over the weekends. 
